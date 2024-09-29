@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>موقع تدريب الرياضيات</title>
+
+  <!-- CSS (Embedded) -->
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f8ff;
+      text-align: center;
+      direction: rtl;
+      padding: 50px;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px 0px #aaa;
+      width: 500px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #007bff;
+    }
+
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .question-container {
+      margin-bottom: 20px;
+    }
+
+    .question {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .choices {
+      margin-bottom: 10px;
+    }
+
+    #feedback {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    .correct-answer {
+      color: green;
+    }
+
+    .wrong-answer {
+      color: red;
+    }
+
+    .feedback-section {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    #result-link-section {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    #teacher-view {
+      margin-top: 40px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>مرحبًا بكم في تدريب الرياضيات للصف السابع</h1>
+
+    <!-- Student Name Input -->
+    <div id="name-input-section">
+      <label for="student-name">الرجاء إدخال اسمك:</label>
+      <input type="text" id="student-name" placeholder="اسم الطالب">
+      <button onclick="startQuiz()">ابدأ الاختبار</button>
+    </div>
+
+    <!-- Quiz Section -->
+    <form id="quiz-form" style="display: none;">
+      <div id="quiz-container"></div>
+      <button type="button" onclick="submitQuiz()">إرسال الإجابات</button>
+    </form>
+
+    <!-- Result Link Display Section -->
+    <div id="result-link-section"></div>
+
+    <!-- Teacher View Section -->
+    <div id="teacher-view">
+      <h2>نتائج الطالب</h2>
+      <label for="result-code-input">أدخل الكود:</label>
+      <input type="text" id="result-code-input" placeholder="أدخل الكود"><br><br>
+      <label for="teacher-password">أدخل كلمة المرور:</label>
+      <input type="password" id="teacher-password" placeholder="أدخل كلمة المرور">
+      <button onclick="showTeacherResults()">عرض النتائج</button>
+      <div id="teacher-feedback"></div>
+    </div>
+  </div>
+
+  <!-- JavaScript (Embedded) -->
+  <script>
+    const questions = [];
+    const correctAnswers = [];
+    const totalQuestions = 10;
+    let studentName = '';
+    let detailedFeedback = '';
+    let resultCode = '';
+    const teacherPassword = '5555'; // Fixed password for teachers
+
+    // Function to generate random math questions
+    function generateQuestion() {
+      const num1 = Math.floor(Math.random() * 20) + 1;
+      const num2 = Math.floor(Math.random() * 20) + 1;
+      const operators = ['+', '-', '*'];
+      const operator = operators[Math.floor(Math.random() * operators.length)];
+
+      let correctAnswer;
+      switch (operator) {
+        case '+':
+          correctAnswer = num1 + num2;
+          break;
+        case '-':
+          correctAnswer = num1 - num2;
+          break;
+        case '*':
+          correctAnswer = num1 * num2;
+          break;
+      }
+
+      // Generate 3 random answers and include the correct one
+      const wrongAnswer1 = correctAnswer + Math.floor(Math.random() * 10) - 5;
+      const wrongAnswer2 = correctAnswer + Math.floor(Math.random() * 10) - 5;
+      const wrongAnswer3 = correctAnswer + Math.floor(Math.random() * 10) - 5;
+
+      const answers = [correctAnswer, wrongAnswer1, wrongAnswer2, wrongAnswer3];
+      answers.sort(() => Math.random() - 0.5); // Shuffle the answers
+
+      return {
+        question: `ما هي نتيجة ${num1} ${operator} ${num2} ؟`,
+        choices: answers,
+        correctAnswer: correctAnswer
+      };
+    }
+
+    // Function to start the quiz after entering name
+    function startQuiz() {
+      studentName = document.getElementById('student-name').value;
+      if (studentName.trim() === '') {
+        alert('يرجى إدخال اسمك لبدء الاختبار');
+        return;
+      }
+      document.getElementById('name-input-section').style.display = 'none';
+      document.getElementById('quiz-form').style.display = 'block';
+
+      createQuiz();
+    }
+
+    // Function to create the quiz with multiple-choice questions
+    function createQuiz() {
+      const quizContainer = document.getElementById('quiz-container');
+      quizContainer.innerHTML = ''; // Clear the previous content
+      for (let i = 0; i < totalQuestions; i++) {
+        const questionData = generateQuestion();
+        questions.push(questionData.question);
+        correctAnswers.push(questionData.correctAnswer);
+
+        const questionContainer = document.createElement('div');
+        questionContainer.className = 'question-container';
+
+        const questionElement = document.createElement('p');
+        questionElement.className = 'question';
+        questionElement.innerText = `سؤال ${i + 1}: ${questionData.question}`;
+
+        const choicesContainer = document.createElement('div');
+        choicesContainer.className = 'choices';
+
+        questionData.choices.forEach((choice, index) => {
+          const label = document.createElement('label');
+          label.innerHTML = `
+            <input type="radio" name="question${i}" value="${choice}">
+            ${choice}
+          `;
+          choicesContainer.appendChild(label);
+          choicesContainer.appendChild(document.createElement('br'));
+        });
+
+        questionContainer.appendChild(questionElement);
+        questionContainer.appendChild(choicesContainer);
+        quizContainer.appendChild(questionContainer);
+      }
+    }
+
+    // Function to submit the quiz and generate a result link
+    function submitQuiz() {
+      let score = 0;
+      detailedFeedback = ''; // Reset detailed feedback
+
+      // Create feedback for each question (student won't see this)
+      for (let i = 0; i < totalQuestions; i++) {
+        const selectedAnswer = document.querySelector(`input[name="question${i}"]:checked`);
+
+        if (selectedAnswer && parseInt(selectedAnswer.value) === correctAnswers[i]) {
+          score++;
+          detailedFeedback += `سؤال ${i + 1}: ✅ إجابة صحيحة!<br>`;
+        } else {
+          detailedFeedback += `سؤال ${i + 1}: ❌ إجابة خاطئة. الإجابة الصحيحة هي: ${correctAnswers[i]}<br>`;
+        }
+      }
+
+      // Generate the result code
+      resultCode = `${studentName}_${score}_${Math.random().toString(36).substring(7)}`;
+      const resultLinkSection = document.getElementById('result-link-section');
+      resultLinkSection.innerHTML = `تم اكتمال الاختبار. <br> الكود الخاص بك هو: <strong>${resultCode}</strong>. قم بإرساله إلى المعلم.`;
+
+      // Show the teacher input field
+      document.getElementById('teacher-view').style.display = 'block';
+    }
+
+    // Function to show the teacher's view of the results
+    function showTeacherResults() {
+      const resultCodeInput = document.getElementById('result-code-input').value;
+      const enteredPassword = document.getElementById('teacher-password').value;
+      const teacherFeedback = document.getElementById('teacher-feedback');
+
+      // Check if the entered code and password are correct
+      if (resultCodeInput === resultCode && enteredPassword === teacherPassword) {
+        teacherFeedback.innerHTML = `<strong>نتائج الطالب ${studentName}:</strong><br>${detailedFeedback}`;
+      } else {
+        teacherFeedback.innerHTML = 'الكود أو كلمة المرور غير صحيحة. حاول مرة أخرى.';
+      }
+    }
+  </script>
+</body>
+</html>
